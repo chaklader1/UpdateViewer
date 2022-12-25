@@ -248,15 +248,17 @@ public class UpdateViewerContentGatewayClient extends ContentGatewayClient {
 	private void subscribe() {
 	    GetPattern.RequestParameters requestParameters = new GetPattern.RequestParameters();
 
-//		config.setTableNumber(TableNumbers.TABLE_NO_NA_EQUITY_OPTION_ALIAS);
-		if (this.symbolList.isEmpty()) {
-			requestParameters.symbolPatternList.add(new SymbolId(config.getTableNumber(), "*"));
-		}
-		else {
-            for (String symbolPattern : symbolList) {
-                requestParameters.symbolPatternList.add(new SymbolId(config.getTableNumber(), symbolPattern));
-	        }
-		}
+		// GOOGL/LpwEZB.O
+//		if (this.symbolList.isEmpty()) {
+//			requestParameters.symbolPatternList.add(new SymbolId(config.getTableNumber(), "*"));
+//		}
+//		else {
+//            for (String symbolPattern : symbolList) {
+//                requestParameters.symbolPatternList.add(new SymbolId(config.getTableNumber(), symbolPattern));
+//	        }
+//		}
+
+		requestParameters.symbolPatternList.add(new SymbolId('1', "GOOGL/LpwEZB.O"));
 
 		if (this.eventTypeList.isEmpty()) {
 			requestParameters.subscribeParameters.type = SubscribeParameters.Type.TYPE_FULL;
@@ -301,83 +303,82 @@ public class UpdateViewerContentGatewayClient extends ContentGatewayClient {
 	 *
 	 * @param	response HeapMessage containing the serialized response.
 	 */
-	public void onGetPatternResponse(HeapMessage response) {
-		if (isValidResponse(response)) {
-		    GetPattern.ResponseParameters responseParameters = new GetPattern.ResponseParameters();
-
-			if (StatusCode.STATUS_CODE_SUCCESS == getPattern().deserialize(this, response, responseParameters)) {
-				if ((this.shouldOutputHeader) || (config.shouldGetSnapshot())) { // NOTE: May need to process one of the original responses to get field id list.
-					for (ResponseBlock responseBlock : responseParameters.responseBlockList) {
-						if (responseBlock.isValidResponse()) {
-							try {
-								this.fieldListValidator.initialize(responseBlock.fieldData);
-								if (this.shouldOutputHeader)
-									outputHeader();
-								if (config.shouldGetSnapshot())
-									outputSymbol('S', responseBlock.responseKey.symbol, UpdateId.getUnknownUpdateId(), EventType.EVENT_TYPE_NONE, responseBlock.permissionId);
-							} catch (MiddlewareException e) {
-								e.printStackTrace();
-							}
-						}
-						else {
-							System.out.println("This is not valid response");
-						}
-					}
-				}
-			}
-		}
-		else {
-		    System.out.println("onGetPatternResponse failed with error code: " + response.getStatusCode());
-		}
-	}
-
-//	@Override
-//	public void onGetPatternResponse(HeapMessage rawMessage)
-//	{
-//		try
-//		{
-//			if(rawMessage.getMessageType() == MessageTypes.GATEWAY_REQUEST_GET_PATTERN_EX){
+//	public void onGetPatternResponse(HeapMessage response) {
+//		if (isValidResponse(response)) {
+//		    GetPattern.ResponseParameters responseParameters = new GetPattern.ResponseParameters();
 //
-//				if (isValidResponse(rawMessage))
-//				{
-//					GetPattern.ResponseParameters responseParameters = new GetPattern.ResponseParameters();
-//
-//					StatusCode statusCode = getPattern().deserialize(this, rawMessage, responseParameters);
-//					if (statusCode == StatusCode.STATUS_CODE_SUCCESS )
-//					{
-//						for (ResponseBlock responseBlock : responseParameters.responseBlockList) {
+//			if (StatusCode.STATUS_CODE_SUCCESS == getPattern().deserialize(this, response, responseParameters)) {
+//				if ((this.shouldOutputHeader) || (config.shouldGetSnapshot())) { // NOTE: May need to process one of the original responses to get field id list.
+//					for (ResponseBlock responseBlock : responseParameters.responseBlockList) {
+//						if (responseBlock.isValidResponse()) {
 //							try {
-//								if (responseBlock.isValidResponse()) {
-//									fieldListValidator.initialize(responseBlock.fieldData);
-//
-//									final String osiSymbol = UsEquityOptionHelper.getOsiSymbolFromSymbol(responseBlock.responseKey.symbol).replaceAll("\\s+", "");
-//									System.out.println(osiSymbol+" "+responseBlock.responseKey.symbol);
-//								} else {
-//
-//									System.out.println("Hello");
-////									System.out.println("response block is not valid response: " + UsEquityOptionHelper.getOsiSymbolFromSymbol(responseBlock.responseKey.symbol).replaceAll("\\s+", ""));
-//								}
-//							} catch (Exception ex) {
-//								System.out.println("Exception for initiating the field list validator with Activ symbols: " + responseBlock.responseKey.symbol + " and OSI Symbol: " + UsEquityOptionHelper.getOsiSymbolFromSymbol(responseBlock.responseKey.symbol).replaceAll("\\s+", ""));
+//								this.fieldListValidator.initialize(responseBlock.fieldData);
+//								if (this.shouldOutputHeader)
+//									outputHeader();
+//								if (config.shouldGetSnapshot())
+//									outputSymbol('S', responseBlock.responseKey.symbol, UpdateId.getUnknownUpdateId(), EventType.EVENT_TYPE_NONE, responseBlock.permissionId);
+//							} catch (MiddlewareException e) {
+//								e.printStackTrace();
 //							}
 //						}
+//						else {
+//							System.out.println("This is not valid response");
+//						}
 //					}
-//					else
-//					{
-//						System.out.println("invalid snapshot status:" + statusCode );
-//					}
-//				}
-//
-//				else {
-//
-//					System.out.println("snapshot message is not valid response with status: " + rawMessage.getStatusCode() + " and response: " + rawMessage);
 //				}
 //			}
 //		}
-//		catch (Exception ex)
-//		{
+//		else {
+//		    System.out.println("onGetPatternResponse failed with error code: " + response.getStatusCode());
 //		}
 //	}
+
+	@Override
+	public void onGetPatternResponse(HeapMessage rawMessage)
+	{
+		try
+		{
+			if(rawMessage.getMessageType() == MessageTypes.GATEWAY_REQUEST_GET_PATTERN_EX){
+
+				if (isValidResponse(rawMessage))
+				{
+					GetPattern.ResponseParameters responseParameters = new GetPattern.ResponseParameters();
+
+					StatusCode statusCode = getPattern().deserialize(this, rawMessage, responseParameters);
+					if (statusCode == StatusCode.STATUS_CODE_SUCCESS )
+					{
+						for (ResponseBlock responseBlock : responseParameters.responseBlockList) {
+							try {
+								if (responseBlock.isValidResponse()) {
+									fieldListValidator.initialize(responseBlock.fieldData);
+
+									final String osiSymbol = UsEquityOptionHelper.getOsiSymbolFromSymbol(responseBlock.responseKey.symbol).replaceAll("\\s+", "");
+									System.out.println(osiSymbol+" "+responseBlock.responseKey.symbol);
+								} else {
+
+									System.out.println("response block is not valid response: " + UsEquityOptionHelper.getOsiSymbolFromSymbol(responseBlock.responseKey.symbol).replaceAll("\\s+", ""));
+								}
+							} catch (Exception ex) {
+								System.out.println("Exception for initiating the field list validator with Activ symbols: " + responseBlock.responseKey.symbol + " and OSI Symbol: " + UsEquityOptionHelper.getOsiSymbolFromSymbol(responseBlock.responseKey.symbol).replaceAll("\\s+", ""));
+							}
+						}
+					}
+					else
+					{
+						System.out.println("invalid snapshot status:" + statusCode );
+					}
+				}
+
+				else {
+
+					System.out.println("snapshot message is not valid response with status: " + rawMessage.getStatusCode() + " and response: " + rawMessage);
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+		}
+	}
 
 	private RecordUpdate recordUpdate = new RecordUpdate();
 
